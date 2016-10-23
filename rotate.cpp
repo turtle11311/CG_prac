@@ -4,8 +4,6 @@
 #include <GL/glut.h>
 #endif
 #include <cstdio>
-#include <X11/Xlib.h>
-
 
 const size_t POINTNUM = 4;
 const size_t WIN_WIDTH = 800;
@@ -48,16 +46,9 @@ void rotate_it(int id) {
 
 int main(int argc, char **argv)
 {
-    // get X11 info
-    Display* pdsp = XOpenDisplay(NULL);
-    Window wid = DefaultRootWindow(pdsp);
-    XWindowAttributes xwAttr;
-    XGetWindowAttributes(pdsp, wid, &xwAttr);
-
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowPosition((xwAttr.width - WIN_WIDTH)/ 2,
-                           (xwAttr.height - WIN_HEIGHT) / 2);
+    glutInitWindowPosition(0, 0);
     glutInitWindowSize(WIN_WIDTH, WIN_HEIGHT);
     glutCreateWindow("Color");
 
