@@ -1,10 +1,10 @@
+#include <cstdio>
+#include <array>
 #ifdef __APPLE__
     #include <GLUT/glut.h>
 #else
     #include <GL/glut.h>
 #endif
-#include <cstdio>
-#include <array>
 using std::array;
 
 size_t m = 0;
@@ -40,9 +40,9 @@ Cubev* cons_cube() {
 void build_cube(Cubev cube) {
     for (int i = 0; i < 6; ++i) {
         glBegin(GL_POLYGON);
-        glColor3fv(colors[i].begin());
+        glColor3fv(&colors[i].front());
         for(int j = 0; j < 4; ++j)
-            glVertex3fv(cube[cube_vert_id[i][j]].begin());
+            glVertex3fv(&cube[cube_vert_id[i][j]].front());
         glEnd();
     }
 }
