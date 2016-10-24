@@ -39,9 +39,9 @@ Cubev* cons_cube() {
 
 void build_cube(Cubev cube) {
     for (int i = 0; i < 6; ++i) {
-        glColor3fv(colors[i].begin());
         glBegin(GL_POLYGON);
-        for (int j = 0; j < 4; ++j)
+        glColor3fv(colors[i].begin());
+        for(int j = 0; j < 4; ++j)
             glVertex3fv(cube[cube_vert_id[i][j]].begin());
         glEnd();
     }
@@ -67,6 +67,9 @@ void divide_cube(Cubev cube, size_t m) {
         int j, k;
         for (i = 0; i < 6; ++i) {
             for (j = 0; j < 4; ++j) {
+                for (k = 0; k < 3; ++k) c[i][k] = 0;
+            }
+            for (j = 0; j < 4; ++j) {
                 for (k = 0; k < 3; ++k) c[i][k] += cube[cube_vert_id[i][j]][k];
             }
             for (k = 0; k < 3; ++k) c[i][k] /= 4;
@@ -82,7 +85,7 @@ void divide_cube(Cubev cube, size_t m) {
 
 void gasket_cube(size_t m) {
     Cubev cube;
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 3; ++j) cube[i][j] = vertices[i][j];
     }
     divide_cube(cube, m);
