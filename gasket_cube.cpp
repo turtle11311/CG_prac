@@ -4,8 +4,10 @@
     #include <GL/glut.h>
 #endif
 #include <cstdio>
+#include <array>
+using std::array;
 
-size_t m = 3;
+size_t m = 0;
 const size_t POINTNUM = 8;
 const size_t WIN_WIDTH = 600;
 const size_t WIN_HEIGHT = 600;
@@ -13,7 +15,8 @@ const size_t CLOCK_SIZE = 10;
 
 float theta = 0.0;      // rotation angel of graph
 
-typedef GLfloat Point3[3];
+typedef array<GLfloat, 3> Point3;
+typedef array<Point3, 8> Cubev;
 
 Point3 vertices[POINTNUM] = {
     {-1.0, -1.0, 1.0}, {-1.0, -1.0, -1.0}, {1.0, -1.0, -1.0}, {1.0, -1.0, 1.0},
@@ -25,45 +28,64 @@ Point3 colors[POINTNUM] = {
     {1.0, 1.0, 0.0}, {1.0, 0.0, 1.0}, {0.0, 1.0, 1.0}
 };
 
+const size_t cube_vert_id[6][4] = {
+    {0, 1, 2, 3}, {3, 2, 6, 7}, {7, 6, 5, 4},
+    {4, 5, 1, 0}, {0, 3, 7, 4}, {1, 5, 6, 2}
+};
 
-void build_cube(Point3 p0, Point3 p1, Point3 p2, Point3 p3) {
-    glBegin(GL_POLYGON);
-        glVertex3fv(p0);
-        glVertex3fv(p1);
-        glVertex3fv(p2);
-        glVertex3fv(p3);
-    glEnd();
+Cubev* cons_cube() {
+    Cubev *cube = new Cubev;
 }
 
-void divide_cube(Point3 p0, Point3 p1, Point3 p2, Point3 p3, size_t m) {
-    Point3 d0, d1, d2, d3;      // point for divide
-    Point3 center;
+void build_cube(Cubev cube) {
+    for (int i = 0; i < 6; ++i) {
+        glColor3fv(colors[i].begin());
+        glBegin(GL_POLYGON);
+        for (int j = 0; j < 4; ++j)
+            glVertex3fv(cube[cube_vert_id[i][j]].begin());
+        glEnd();
+    }
+}
+
+void divide_cube(Cubev cube, size_t m) {
+    Point3 d01, d04, d03, d12, d15, d23, d26, d37, d67, d47, d45, d56;
+    Point3 cc, c[6] = {};
     int i = 0;
     if (m > 0) {
-        for (i = 0; i < 3; ++i) d0[i] = (p0[i] + p1[i]) / 2;
-        for (i = 0; i < 3; ++i) d1[i] = (p1[i] + p2[i]) / 2;
-        for (i = 0; i < 3; ++i) d2[i] = (p2[i] + p3[i]) / 2;
-        for (i = 0; i < 3; ++i) d3[i] = (p3[i] + p0[i]) / 2;
-        for (i = 0; i < 3; ++i) center[i] = (d0[i] + d2[i]) / 2;
+        for (i = 0; i < 3; ++i) d01[i] = (cube[0][i] + cube[1][i]) / 2;
+        for (i = 0; i < 3; ++i) d04[i] = (cube[0][i] + cube[4][i]) / 2;
+        for (i = 0; i < 3; ++i) d03[i] = (cube[0][i] + cube[3][i]) / 2;
+        for (i = 0; i < 3; ++i) d12[i] = (cube[1][i] + cube[2][i]) / 2;
+        for (i = 0; i < 3; ++i) d15[i] = (cube[1][i] + cube[5][i]) / 2;
+        for (i = 0; i < 3; ++i) d23[i] = (cube[2][i] + cube[3][i]) / 2;
+        for (i = 0; i < 3; ++i) d26[i] = (cube[2][i] + cube[6][i]) / 2;
+        for (i = 0; i < 3; ++i) d56[i] = (cube[5][i] + cube[6][i]) / 2;
+        for (i = 0; i < 3; ++i) d37[i] = (cube[3][i] + cube[7][i]) / 2;
+        for (i = 0; i < 3; ++i) d67[i] = (cube[6][i] + cube[7][i]) / 2;
+        for (i = 0; i < 3; ++i) d47[i] = (cube[4][i] + cube[7][i]) / 2;
+        for (i = 0; i < 3; ++i) d45[i] = (cube[4][i] + cube[5][i]) / 2;
+        int j, k;
+        for (i = 0; i < 6; ++i) {
+            for (j = 0; j < 4; ++j) {
+                for (k = 0; k < 3; ++k) c[i][k] += cube[cube_vert_id[i][j]][k];
+            }
+            for (k = 0; k < 3; ++k) c[i][k] /= 4;
+        }
+        for (i = 0; i < 3; ++i) cc[i] = (c[0][i] + c[2][i]) / 2;
 
-        divide_cube(p0, d0, center, d3, m - 1);
-        divide_cube(center, d1, p2, d2, m - 1);
-    } else build_cube(p0, p1, p2, p3);
+        divide_cube({cube[0], d01, c[0], d03, d04, c[3], cc, c[4]}, m - 1);
+        divide_cube({c[4], cc, c[1], d37, d47, c[2], d67, cube[7]}, m - 1);
+        divide_cube({c[3], d15, c[5], cc, d45, cube[5], d56, c[2]}, m - 1);
+        divide_cube({c[0], d12, cube[2], d23, cc, c[5], d26, c[1]}, m - 1);
+    } else build_cube(cube);
 }
 
 void gasket_cube(size_t m) {
-    glColor3fv(colors[0]);
-    divide_cube(vertices[0], vertices[1], vertices[2], vertices[3], m);
-    glColor3fv(colors[1]);
-    divide_cube(vertices[3], vertices[2], vertices[6], vertices[7], m);
-    glColor3fv(colors[2]);
-    divide_cube(vertices[7], vertices[6], vertices[5], vertices[4], m);
-    glColor3fv(colors[3]);
-    divide_cube(vertices[4], vertices[5], vertices[1], vertices[0], m);
-    glColor3fv(colors[4]);
-    divide_cube(vertices[0], vertices[3], vertices[7], vertices[4], m);
-    glColor3fv(colors[5]);
-    divide_cube(vertices[1], vertices[5], vertices[6], vertices[2], m);
+    Cubev cube;
+    for (int i = 0; i < 6; ++i) {
+            for (int j = 0; j < 3; ++j) cube[i][j] = vertices[i][j];
+    }
+    divide_cube(cube, m);
 }
 
 void rotate_it(int id) {

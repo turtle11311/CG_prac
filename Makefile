@@ -10,7 +10,7 @@ all: $(TARGET)
 	./$(TARGET)
 
 $(TARGET): $(FILE)
-	$(CXX) $< -o $(TARGET) $(LDFLAGS)
+	$(CXX) -std=c++11 $< -o $(TARGET) $(LDFLAGS)
 
 run: clean all
 
