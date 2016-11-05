@@ -1,11 +1,13 @@
 #include <cstdio>
 #include <array>
+#include <vector>
 #ifdef __APPLE__
     #include <GLUT/glut.h>
 #else
     #include <GL/glut.h>
 #endif
 using std::array;
+using std::vector;
 
 size_t m = 0;
 const size_t POINTNUM = 8;
@@ -18,10 +20,12 @@ float theta = 0.0;      // rotation angel of graph
 typedef array<GLfloat, 3> Point3;
 typedef array<Point3, 8> Cubev;
 
-Point3 vertices[POINTNUM] = {
+vector<GLfloat> drawCube;
+
+Cubev vertices{{
     {-1.0, -1.0, 1.0}, {-1.0, -1.0, -1.0}, {1.0, -1.0, -1.0}, {1.0, -1.0, 1.0},
     {-1.0, 1.0, 1.0}, {-1.0, 1.0, -1.0}, {1.0, 1.0, -1.0}, {1.0, 1.0, 1.0}
-};
+}};
 
 Point3 colors[POINTNUM] = {
     {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0},
@@ -33,17 +37,25 @@ const size_t cube_vert_id[6][4] = {
     {4, 5, 1, 0}, {0, 3, 7, 4}, {1, 5, 6, 2}
 };
 
-Cubev* cons_cube() {
-    Cubev *cube = new Cubev;
-}
+const GLubyte cubeIndices[] = {
+    0, 1, 2, 3,
+    3, 2, 6, 7,
+    7, 6, 5, 4,
+    4, 5, 1, 0,
+    0, 3, 7, 4,
+    1, 5, 6, 2
+};
 
-void build_cube(Cubev cube) {
-    for (int i = 0; i < 6; ++i) {
-        glBegin(GL_POLYGON);
-        glColor3fv(&colors[i].front());
-        for(int j = 0; j < 4; ++j)
-            glVertex3fv(&cube[cube_vert_id[i][j]].front());
-        glEnd();
+void draw_gasket_cube() {
+    GLfloat *ptr = &drawCube.front();
+    for (int i = 0; i < drawCube.size(); i += 24) {
+        glVertexPointer(3, GL_FLOAT, 0, ptr + i);
+        for (int j = 0; j < 6; ++j) {
+            glColor3fv(&colors[j].front());
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_BYTE, &cubeIndices[4*j]);
+            glDisableClientState(GL_VERTEX_ARRAY);
+        }
     }
 }
 
@@ -80,7 +92,11 @@ void divide_cube(Cubev cube, size_t m) {
         divide_cube({c[4], cc, c[1], d37, d47, c[2], d67, cube[7]}, m - 1);
         divide_cube({c[3], d15, c[5], cc, d45, cube[5], d56, c[2]}, m - 1);
         divide_cube({c[0], d12, cube[2], d23, cc, c[5], d26, c[1]}, m - 1);
-    } else build_cube(cube);
+    } else {
+        for (int i = 0; i < 8; ++i)
+            for (int j = 0; j < 3; ++j)
+                drawCube.push_back(cube[i][j]);
+    }
 }
 
 void gasket_cube(size_t m) {
@@ -105,7 +121,7 @@ void display(void)
     glLoadIdentity();
     glRotatef(theta, 1.0, 1.0, 1.0);
 
-    gasket_cube(m);
+    draw_gasket_cube();
 
     glFlush();
 }
@@ -114,7 +130,12 @@ void reshape(int w, int h) {
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-2.0, 2.0, -2.0, 2.0, -2.0, 2.0);
+	if (w <= h)
+		glOrtho(-2.0, 2.0, -2.0 * (GLfloat) h / (GLfloat) w,
+		2.0 * (GLfloat) h / (GLfloat) w, -10.0, 10.0);
+	else
+		glOrtho(-2.0 * (GLfloat) w / (GLfloat) h,
+		2.0 * (GLfloat) w / (GLfloat) h, -2.0, 2.0, -10.0, 10.0);
 }
 
 void mouseCallback(int btn, int status, int x, int y) {
@@ -122,6 +143,9 @@ void mouseCallback(int btn, int status, int x, int y) {
         ++m;
     else if (btn == GLUT_RIGHT_BUTTON && status == GLUT_DOWN)
         m = (m == 0) ? 0 : m - 1;
+    drawCube.clear();
+    gasket_cube(m);
+    printf("%u\n", drawCube.size());
     glutPostRedisplay();
 }
 
@@ -139,5 +163,7 @@ int main(int argc, char **argv)
     glutMouseFunc(mouseCallback);
     glutTimerFunc(CLOCK_SIZE, rotate_it, 1);
 
+    drawCube.reserve(24 * 1024);
+    gasket_cube(0);
     glutMainLoop();
 }
