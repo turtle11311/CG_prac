@@ -1,7 +1,5 @@
 #include <cstdio>
 #include <vector>
-using std::vector;
-
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
@@ -10,14 +8,11 @@ using std::vector;
 
 const int WIN_WIDTH = 600;
 const int WIN_HEIGHT = 600;
-const GLdouble ORTHO_SIZE = 2;
+const GLdouble ORTHO_SIZE = 5;
 
-int nowWidth;
-int nowHeight;
+int nowWidth, nowHeight;
 
-float theta = 45.0;      // rotation angel of graph
-
-vector<GLfloat> vertices;
+std::vector<GLfloat> vertices;
 
 void display(void)
 {
@@ -25,44 +20,39 @@ void display(void)
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glColor3f(0.7, 0.5, 0.4);
+
+    glColor3f(0.5, 0.5, 1.0);
     glBegin(GL_POLYGON);
-        glVertex2f(1.0, 0.0);
-        glVertex2f(1.0, 1.0);
-        glVertex2f(-1.5, 1.7);
-    //     for (int i = 0; i < vertices.size(); i += 2) {
-    //         glVertex2fv(&vertices[i]);
-    //     }
+        for (int i = 0; i < vertices.size(); i += 2) {
+            glVertex2fv(&vertices[i]);
+        }
     glEnd();
+    glFlush();
 }
 
 void reshape(int w, int h) {
-    nowWidth = w, nowHeight = h;
     glViewport(0, 0, w, h);
+    nowWidth = w, nowHeight = h;
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-	// if (w <= h)
-	// 	glOrtho(-ORTHO_SIZE, ORTHO_SIZE,
-    //                -ORTHO_SIZE * (GLdouble) h / (GLdouble) w,
-	// 	           ORTHO_SIZE * (GLdouble) h / (GLdouble) w, -2.0, 2.0);
-	// else
-	// 	glOrtho(-ORTHO_SIZE * (GLdouble) w / (GLdouble) h,
-    //                ORTHO_SIZE * (GLdouble) w / (GLdouble) h,
-    //                -ORTHO_SIZE, ORTHO_SIZE, -2.0, 2.0);
-    gluOrtho2D(-2.0, 2.0, -2.0, 2.0);
-}
-
-void rotate_it(int id) {
-    theta++;
-    glutPostRedisplay();
-    glutTimerFunc(10,rotate_it,id);
+    if (w <= h)
+        gluOrtho2D(-ORTHO_SIZE, ORTHO_SIZE, -ORTHO_SIZE * (GLfloat)h / (GLfloat)w,
+            ORTHO_SIZE * (GLfloat)h / (GLfloat)w);
+    else
+        gluOrtho2D(-ORTHO_SIZE * (GLfloat)w / (GLfloat)h,
+            ORTHO_SIZE * (GLfloat)w / (GLfloat)h, -ORTHO_SIZE, ORTHO_SIZE);
 }
 
 void mouse(int btn, int status, int x, int y) {
     if (btn == GLUT_LEFT_BUTTON && status == GLUT_DOWN) {
-        //vertices.push_back(((GLfloat)x / nowWidth) * ORTHO_SIZE);
-        //vertices.push_back(((GLfloat)y / nowHeight) * ORTHO_SIZE);
-    } else {
+        if (nowWidth <= nowHeight) {
+            vertices.push_back((((GLdouble)x / nowWidth) * 2 - 1) * ORTHO_SIZE);
+            vertices.push_back(-((((GLdouble)y / nowWidth) * 2 - (GLdouble)nowHeight / nowWidth) * ORTHO_SIZE));
+        }
+        else {
+            vertices.push_back((((GLdouble)x / nowHeight) * 2 - (GLdouble)nowWidth / nowHeight) * ORTHO_SIZE);
+            vertices.push_back(-((((GLdouble)y / nowHeight) * 2 - 1) * ORTHO_SIZE));
+        }
     }
     glutPostRedisplay();
 }
@@ -73,12 +63,11 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(WIN_WIDTH, WIN_HEIGHT);
-    glutCreateWindow("Drawer");
+    glutCreateWindow("Rotate");
 
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
-    //glutMouseFunc(mouse);
+    glutMouseFunc(mouse);
     vertices.reserve(100);
-
     glutMainLoop();
 }
