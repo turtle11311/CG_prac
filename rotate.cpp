@@ -36,11 +36,11 @@ void reshape(int w, int h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 	if (w <= h)
-		glOrtho(-2.0, 2.0, -2.0 * (GLfloat) h / (GLfloat) w,
-		2.0 * (GLfloat) h / (GLfloat) w, -10.0, 10.0);
+		gluOrtho2D(-2.0, 2.0, -2.0 * (GLfloat) h / (GLfloat) w,
+		2.0 * (GLfloat) h / (GLfloat) w);
 	else
-		glOrtho(-2.0 * (GLfloat) w / (GLfloat) h,
-		2.0 * (GLfloat) w / (GLfloat) h, -2.0, 2.0, -10.0, 10.0);
+		gluOrtho2D(-2.0 * (GLfloat) w / (GLfloat) h,
+		2.0 * (GLfloat) w / (GLfloat) h, -2.0, 2.0);
 }
 
 void rotate_it(int id) {
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(WIN_WIDTH, WIN_HEIGHT);
-    glutCreateWindow("Color");
+    glutCreateWindow("Rotate");
 
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
