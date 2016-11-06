@@ -145,7 +145,6 @@ void mouseCallback(int btn, int status, int x, int y) {
         m = (m == 0) ? 0 : m - 1;
     drawCube.clear();
     gasket_cube(m);
-    printf("%u\n", drawCube.size());
     glutPostRedisplay();
 }
 

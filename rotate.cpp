@@ -35,7 +35,12 @@ void reshape(int w, int h) {
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(-2.0, 2.0, -2.0, 2.0);
+	if (w <= h)
+		glOrtho(-2.0, 2.0, -2.0 * (GLfloat) h / (GLfloat) w,
+		2.0 * (GLfloat) h / (GLfloat) w, -10.0, 10.0);
+	else
+		glOrtho(-2.0 * (GLfloat) w / (GLfloat) h,
+		2.0 * (GLfloat) w / (GLfloat) h, -2.0, 2.0, -10.0, 10.0);
 }
 
 void rotate_it(int id) {
