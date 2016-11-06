@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <vector>
+using std::vector;
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
@@ -12,7 +13,7 @@ const GLdouble ORTHO_SIZE = 5;
 
 int nowWidth, nowHeight;
 
-std::vector<GLfloat> vertices;
+vector<vector<GLfloat>> graphs;
 
 void display(void)
 {
@@ -22,11 +23,20 @@ void display(void)
     glLoadIdentity();
 
     glColor3f(0.5, 0.5, 1.0);
-    glBegin(GL_POLYGON);
-        for (int i = 0; i < vertices.size(); i += 2) {
-            glVertex2fv(&vertices[i]);
+    glBegin(GL_LINE_STRIP);
+        for (int i = 0; i < graphs.back().size(); i += 2) {
+            glVertex2fv(&graphs.back()[i]);
         }
     glEnd();
+
+    glColor3f(0.5, 0.5, 1.0);
+    for (int i = graphs.size() - 2; i >= 0; --i) {
+        glBegin(GL_POLYGON);
+            for (int j = 0; j < graphs[i].size(); j += 2) {
+                glVertex2fv(&graphs[i][j]);
+            }
+        glEnd();
+    }
     glFlush();
 }
 
@@ -46,13 +56,30 @@ void reshape(int w, int h) {
 void mouse(int btn, int status, int x, int y) {
     if (btn == GLUT_LEFT_BUTTON && status == GLUT_DOWN) {
         if (nowWidth <= nowHeight) {
-            vertices.push_back((((GLdouble)x / nowWidth) * 2 - 1) * ORTHO_SIZE);
-            vertices.push_back(-((((GLdouble)y / nowWidth) * 2 - (GLdouble)nowHeight / nowWidth) * ORTHO_SIZE));
+            graphs.back().push_back((((GLdouble)x / nowWidth) * 2 - 1) * ORTHO_SIZE);
+            graphs.back().push_back(-((((GLdouble)y / nowWidth) * 2 - (GLdouble)nowHeight / nowWidth) * ORTHO_SIZE));
         }
         else {
-            vertices.push_back((((GLdouble)x / nowHeight) * 2 - (GLdouble)nowWidth / nowHeight) * ORTHO_SIZE);
-            vertices.push_back(-((((GLdouble)y / nowHeight) * 2 - 1) * ORTHO_SIZE));
+            graphs.back().push_back((((GLdouble)x / nowHeight) * 2 - (GLdouble)nowWidth / nowHeight) * ORTHO_SIZE);
+            graphs.back().push_back(-((((GLdouble)y / nowHeight) * 2 - 1) * ORTHO_SIZE));
         }
+    }
+    else if (btn == GLUT_RIGHT_BUTTON && status == GLUT_DOWN) {
+        graphs.resize(graphs.size() + 1);
+    }
+    glutPostRedisplay();
+}
+
+void keyBoard(unsigned char ch, int x, int y) {
+    switch (ch) {
+    case 'q': case 'Q':
+        if (graphs.size() > 1)
+            graphs.pop_back();
+        else
+            graphs.back().clear();
+        break;
+    default:
+        break;
     }
     glutPostRedisplay();
 }
@@ -63,11 +90,13 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(WIN_WIDTH, WIN_HEIGHT);
-    glutCreateWindow("Rotate");
+    glutCreateWindow("Little Painter");
 
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutMouseFunc(mouse);
-    vertices.reserve(100);
+    glutKeyboardFunc(keyBoard);
+    graphs.reserve(10);
+    graphs.resize(1);
     glutMainLoop();
 }
