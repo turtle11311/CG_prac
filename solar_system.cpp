@@ -12,6 +12,7 @@ bool play = false;
 
 void drawAxis(float length = 30.0)
 {
+    glDisable(GL_LIGHTING);
     glBegin(GL_LINES);
         glColor3ub(255, 0, 0);
         glVertex3f(0.0, 0.0, 0.0);
@@ -23,45 +24,79 @@ void drawAxis(float length = 30.0)
         glVertex3f(0.0, 0.0, 0.0);
         glVertex3f(0.0, 0.0, length);
     glEnd();
+    glEnable(GL_LIGHTING);
 }
 
 void display(void)
 {
     static float earthTheta = 0.0;
+    static float earthSelfTheta = 0.0;
     static float moonTheta = 0.0;
+    static float marsTheta = 0.0;
+    static float marsSelfTheta = 0.0;
     glMatrixMode(GL_MODELVIEW);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     gluLookAt(0, 600.0, 0, 0, 0, 0, 0, 0, 1);
 
-    glPushMatrix();
+    // draw sun
     glColor3ub(255, 255, 0);
-    glutSolidSphere(30.0f, 30, 17);
+    glutSolidSphere(25.0f, 30, 17);
     if (!play) drawAxis(60.0);
-
-    glRotatef(earthTheta, 0.0, 1.0, 0.0);
-    glTranslatef(150.0, 0.0, 0.0);
-    glColor3ub(0, 0, 200);
-    glutSolidSphere(20.0f, 30, 17);
     glPushMatrix();
 
-    // draw City on the Earth
-    glTranslatef(20.0f, 0.0, 0.0);
-    glColor3ub(200, 0, 0);
-    glutSolidSphere(6.0f, 15, 10);
+        glRotatef(earthTheta, 0.0, 1.0, 1.0);
+        glTranslatef(100.0, 0.0, 0.0);
+        glRotatef(earthSelfTheta, 0.0, 0.7, 0.1);
+        glColor3ub(0, 0, 200);
+        glutSolidSphere(15.0f, 30, 17);
+        if (!play) drawAxis(25);
+        glPushMatrix();
 
+            // draw City on the Earth
+            glTranslatef(15.0f, 0.0, 0.0);
+            glColor3ub(200, 0, 0);
+            glutSolidSphere(4, 15, 10);
+
+        glPopMatrix();
+
+        // draw the moon
+        glRotatef(moonTheta - earthSelfTheta, 0, 1, 0);
+        glTranslatef(40.0, 0.0, 0.0);
+        glColor3ub(100, 100, 100);
+        glutSolidSphere(8.0, 15, 10);
+        if (!play) drawAxis(20);
     glPopMatrix();
 
-    glRotatef(moonTheta, 0, 1, 0);
-    glTranslatef(40.0, 0.0, 0.0);
-    glColor3ub(100, 100, 100);
-    glutSolidSphere(10.0, 15, 10);
+    glPushMatrix();
+        // draw Mars
+        glRotatef(marsTheta, 0, 0.3, 0.8);
+        glTranslatef(200, 0, 0);
+        glRotatef(marsSelfTheta, 0, 0, 1);
+        glColor3ub(216, 89, 14);
+        glutSolidSphere(15.0, 15, 10);
+        if (!play) drawAxis(25);
+        glPushMatrix();
+            // add city
+            glTranslatef(0, 15, 0);
+            glColor3ub(2, 122, 26);
+            glutSolidSphere(4, 15, 10);
+            // draw settlelite
+            glTranslatef(0, 30, 0);
+            glColor3ub(189, 16, 203);
+            glutSolidSphere(4, 15, 10);
+        glPopMatrix();
+
+    glPopMatrix();
 
 
     glFlush();
     if (play) {
-        earthTheta = (earthTheta > 360.0) ? 0.0 : earthTheta + 1.0f;
-        moonTheta = (moonTheta > 360.0) ? 0.0 : moonTheta + 0.6f;
+        earthTheta = (earthTheta > 360.0) ? 0.0 : earthTheta + 1.2f;
+        earthSelfTheta = (earthSelfTheta > 360.0) ? 0.0 : earthSelfTheta + 0.2f;
+        moonTheta = (moonTheta > 360.0) ? 0.0 : moonTheta + 1.0f;
+        marsTheta = (marsTheta > 360.0) ? 0.0 : marsTheta + 0.8f;
+        marsSelfTheta = (marsSelfTheta > 360.0) ? 0.0 : marsSelfTheta + 0.5f;
     }
     glutSwapBuffers();
 }
@@ -94,12 +129,30 @@ void keyBoard(unsigned char key, int x, int y)
 
 int main(int argc, char **argv)
 {
+    // Lighting values
+    GLfloat  whiteLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+    GLfloat  sourceLight[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+    GLfloat	 lightPos[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(WIN_WIDTH, WIN_HEIGHT);
     glutInitWindowPosition(0, 0);
     glutCreateWindow("Solar System");
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_COLOR_MATERIAL);
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, whiteLight);
+    //glLightfv(GL_LIGHT0, GL_DIFFUSE, sourceLight);
+    //glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    glEnable(GL_LIGHT0);
+    // Enable color material
+    glEnable(GL_COLOR_MATERIAL);
+
+    // Set Material properties to follow glColor values directly
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+
+    // Black background
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyBoard);
