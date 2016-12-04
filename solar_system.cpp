@@ -4,6 +4,10 @@
     #include <GL/glut.h>
 #endif
 
+// Lighting values
+GLfloat  sourceLight[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+GLfloat	 lightPos[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+GLfloat  whiteLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 const size_t WIN_WIDTH = 600;
 const size_t WIN_HEIGHT = 600;
 const size_t CLOCK_INTERVAL = 20;
@@ -12,6 +16,7 @@ bool play = false;
 
 void drawAxis(float length = 30.0)
 {
+    glPushAttrib(GL_LIGHTING_BIT);
     glDisable(GL_LIGHTING);
     glBegin(GL_LINES);
         glColor3ub(255, 0, 0);
@@ -24,7 +29,7 @@ void drawAxis(float length = 30.0)
         glVertex3f(0.0, 0.0, 0.0);
         glVertex3f(0.0, 0.0, length);
     glEnd();
-    glEnable(GL_LIGHTING);
+    glPopAttrib();
 }
 
 void display(void)
@@ -40,9 +45,13 @@ void display(void)
     gluLookAt(0, 600.0, 0, 0, 0, 0, 0, 0, 1);
 
     // draw sun
+    glDisable(GL_LIGHTING);
     glColor3ub(255, 255, 0);
     glutSolidSphere(25.0f, 30, 17);
     if (!play) drawAxis(60.0);
+    glEnable(GL_LIGHTING);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, sourceLight);
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
     glPushMatrix();
 
         glRotatef(earthTheta, 0.0, 1.0, 1.0);
@@ -129,10 +138,6 @@ void keyBoard(unsigned char key, int x, int y)
 
 int main(int argc, char **argv)
 {
-    // Lighting values
-    GLfloat  whiteLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-    GLfloat  sourceLight[] = { 0.8f, 0.8f, 0.8f, 1.0f };
-    GLfloat	 lightPos[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(WIN_WIDTH, WIN_HEIGHT);
@@ -140,16 +145,11 @@ int main(int argc, char **argv)
     glutCreateWindow("Solar System");
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
-    glEnable(GL_COLOR_MATERIAL);
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, whiteLight);
-    //glLightfv(GL_LIGHT0, GL_DIFFUSE, sourceLight);
-    //glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-    glEnable(GL_LIGHT0);
     // Enable color material
     glEnable(GL_COLOR_MATERIAL);
-
-    // Set Material properties to follow glColor values directly
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, sourceLight);
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    glEnable(GL_LIGHT0);
 
     // Black background
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
